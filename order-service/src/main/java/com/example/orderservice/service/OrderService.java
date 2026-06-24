@@ -1,0 +1,8 @@
+package com.example.orderservice.service;
+
+import com.example.orderservice.dto.request.OrderCreateRequest;
+import com.example.orderservice.dto.response.OrderResponse;
+
+public interface OrderService {
+    OrderResponse create(OrderCreateRequest request);
+}
