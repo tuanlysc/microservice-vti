@@ -14,4 +14,6 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     @Query("select p from Product  p where lower(p.name) like lower(concat('%', :name ,'%') ) and p.isDeleted=false ")
     List<Product> findByProductName(@Param("name") String productName);
+
+    List<Product> findByIdIn(List<String> productIds);
 }

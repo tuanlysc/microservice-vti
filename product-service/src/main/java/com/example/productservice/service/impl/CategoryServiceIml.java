@@ -1,4 +1,4 @@
-package com.example.productservice.service.iml;
+package com.example.productservice.service.impl;
 
 import com.example.productservice.dto.request.CategoryCreateRequest;
 import com.example.productservice.dto.request.CategoryUpdateRequest;

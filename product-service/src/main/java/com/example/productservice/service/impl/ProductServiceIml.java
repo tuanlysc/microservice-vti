@@ -1,6 +1,7 @@
-package com.example.productservice.service.iml;
+package com.example.productservice.service.impl;
 
 import com.example.productservice.dto.request.ProductCreateRequest;
+import com.example.productservice.dto.request.ProductFilter;
 import com.example.productservice.dto.request.ProductUpdateRequest;
 import com.example.productservice.dto.response.ProductResponse;
 import com.example.productservice.entity.Product;
@@ -62,6 +63,19 @@ public class ProductServiceIml implements ProductService {
     @Override
     public List<ProductResponse> findByName(String productName) {
         return productRepository.findByProductName(productName)
+                .stream()
+                .map(productMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public List<ProductResponse> findByIds(ProductFilter request) {
+
+        List<String> ids = request.getProductIds().stream().toList();
+
+        List<Product> products = productRepository.findByIdIn(ids);
+
+        return products
                 .stream()
                 .map(productMapper::toResponse)
                 .toList();

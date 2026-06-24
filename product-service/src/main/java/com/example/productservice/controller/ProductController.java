@@ -1,6 +1,7 @@
 package com.example.productservice.controller;
 
 import com.example.productservice.dto.request.ProductCreateRequest;
+import com.example.productservice.dto.request.ProductFilter;
 import com.example.productservice.dto.request.ProductUpdateRequest;
 import com.example.productservice.dto.response.ApiResponse;
 import com.example.productservice.dto.response.ProductResponse;
@@ -82,6 +83,15 @@ public class ProductController {
                 ApiResponse.<ProductResponse>builder()
                         .code(200)
                         .message("Product Deleted")
+                        .build()
+        );
+    }
+
+    @PostMapping("/search")
+    ResponseEntity<ApiResponse<List<ProductResponse>>> search(@RequestBody @Valid ProductFilter ids){
+        return ResponseEntity.status(HttpStatus.OK).body(
+                ApiResponse.<List<ProductResponse>>builder()
+                        .data(productService.findByIds(ids))
                         .build()
         );
     }
