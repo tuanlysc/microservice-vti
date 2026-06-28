@@ -12,5 +12,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderCreateRequest {
     String customerId;
+    String promotionCode;
     List<OrderItemCreateRequest> orderItemCreateRequests;
 }

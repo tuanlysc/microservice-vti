@@ -26,7 +26,7 @@ public class OrderItem extends BaseEntity {
     @Column(name = "product_id", nullable = false)
     private String productId;
 
-    @Column(name = "price", precision = 8, scale = 2, nullable = false)
+    @Column(name = "price", precision = 10, scale = 2, nullable = false)
     private BigDecimal price;
 
     @Column(name = "quantity", nullable = false)

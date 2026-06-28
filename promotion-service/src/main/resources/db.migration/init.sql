@@ -1,6 +1,6 @@
 create database promotion_service;
 
-use product_service;
+use promotion_service;
 
 create table promotions(
     id varchar(36) primary key,
@@ -27,10 +27,8 @@ create table promotion_usages(
     promotion_id varchar(36),
     user_id varchar(36),
     order_id varchar(36),
-    discount_applied decimal(8,2),
-    order_amount decimal(8,2),
-    used_at timestamp,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(255),
+    discount_applied decimal(10,2),
+    order_amount decimal(10,2),
+    used_at timestamp DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (promotion_id) REFERENCES promotions(id)
 )

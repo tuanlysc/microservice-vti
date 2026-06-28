@@ -8,8 +8,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class WebClientConfig {
-    @Bean
-    public WebClient webClient(@Value("${services.product-service}") String baseUrl) {
+    @Bean("productWebClient")
+    public WebClient productwebClient(@Value("${services.product-service}") String baseUrl) {
+
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .build();
+    }
+
+    @Bean("promotionWebClient")
+    public WebClient promotionwebClient(@Value("${services.promotion-service}") String baseUrl) {
 
         return WebClient.builder()
                 .baseUrl(baseUrl)

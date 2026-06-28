@@ -27,8 +27,11 @@ public class Order extends BaseEntity {
     @Column(name = "status", nullable = false)
     private String status;
 
-    @Column(name = "total_amount", precision = 8, scale = 2, nullable = false)
+    @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalAmount;
+
+    @Builder.Default
+    private Boolean promotionApplied = false;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

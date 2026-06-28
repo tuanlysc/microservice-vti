@@ -16,7 +16,7 @@ create table categories(
 create table products(
                          id varchar(36) primary key,
                          name varchar(255) not null,
-                         price decimal(8,2),
+                         price decimal(10,2),
                          stock int,
                          category_id varchar(36),
                          is_deleted boolean,

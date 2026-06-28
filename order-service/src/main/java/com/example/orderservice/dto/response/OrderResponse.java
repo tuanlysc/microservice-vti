@@ -16,6 +16,7 @@ public class OrderResponse {
     String id;
     String customerId;
     String status;
+    Boolean promotionApplied;
     BigDecimal totalAmount;
     Boolean isDeleted;
     Instant createdAt;

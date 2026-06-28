@@ -24,7 +24,7 @@ public class CategoryServiceIml implements CategoryService {
 
     @Override
     public CategoryResponse createCategory(CategoryCreateRequest request) {
-        if(!categoryRepository.existsById(request.getParentId())){
+        if(request.getParentId()!= null && !categoryRepository.existsById(request.getParentId())){
             throw new ApplicationException(ErrorCode.CATEGORY_NOT_FOUND);
         }else if(categoryRepository.findCategoryByName(request.getName()).isPresent()){
             throw new ApplicationException(ErrorCode.CATEGORY_DUPLICATE_NAME);

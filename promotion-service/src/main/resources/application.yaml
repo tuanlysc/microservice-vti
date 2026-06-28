@@ -1,3 +1,11 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /ecommerce/v1
 spring:
   application:
     name: promotion-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/promotion_service
+    username: root
+    password: root

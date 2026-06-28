@@ -1,8 +1,6 @@
 package com.example.productservice.service;
 
-import com.example.productservice.dto.request.ProductCreateRequest;
-import com.example.productservice.dto.request.ProductFilter;
-import com.example.productservice.dto.request.ProductUpdateRequest;
+import com.example.productservice.dto.request.*;
 import com.example.productservice.dto.response.ProductResponse;
 
 import java.util.List;
@@ -21,4 +19,6 @@ public interface ProductService {
     ProductResponse update(String id, ProductUpdateRequest request);
 
     void deleteProductById(String id);
+
+    Boolean lock(LockProductRequest request);
 }

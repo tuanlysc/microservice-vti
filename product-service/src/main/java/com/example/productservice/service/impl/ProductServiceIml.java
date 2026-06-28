@@ -1,10 +1,9 @@
 package com.example.productservice.service.impl;
 
-import com.example.productservice.dto.request.ProductCreateRequest;
-import com.example.productservice.dto.request.ProductFilter;
-import com.example.productservice.dto.request.ProductUpdateRequest;
+import com.example.productservice.dto.request.*;
 import com.example.productservice.dto.response.ProductResponse;
 import com.example.productservice.entity.Product;
+import com.example.productservice.event.LockResultEvent;
 import com.example.productservice.exception.ApplicationException;
 import com.example.productservice.exception.ErrorCode;
 import com.example.productservice.mapper.ProductMapper;
@@ -15,9 +14,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,8 +32,10 @@ public class ProductServiceIml implements ProductService {
     CategoryRepository categoryRepository;
     ProductRepository productRepository;
     ProductMapper productMapper;
+    KafkaTemplate<String, LockResultEvent>  kafkaTemplate;
 
     @Override
+    @Transactional
     public ProductResponse create(ProductCreateRequest request) {
         Product product = productMapper.toProduct(request);
         if (!categoryRepository.existsById(request.getCategoryId())) {
@@ -69,6 +75,7 @@ public class ProductServiceIml implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> findByIds(ProductFilter request) {
 
         List<String> ids = request.getProductIds().stream().toList();
@@ -105,6 +112,37 @@ public class ProductServiceIml implements ProductService {
         product.setIsDeleted(true);
 
         productRepository.save(product);
+    }
+
+    @Override
+    @Transactional
+    public Boolean lock(LockProductRequest request) {
+        List<LockProductItemRequest>  items = request.getItems();
+        List<String> productIds = items.stream().map(LockProductItemRequest::getProductId).toList();
+
+        Map<String,Integer> productsMap = items.stream()
+                .collect(Collectors.toMap(LockProductItemRequest::getProductId, LockProductItemRequest::getQuantity));
+
+        List<Product> products = productRepository.findByIdIn(productIds);
+
+        List<Product> productStock = new ArrayList<>();
+        for (Product product : products) {
+            int newStock = product.getStock() - productsMap.get(product.getId());
+            if (newStock < 0) {
+                throw new ApplicationException(ErrorCode.STOCK_PRODUCT_TOO_LOW);
+            }
+            product.setStock(newStock);
+            productStock.add(product);
+        }
+
+        productRepository.saveAll(productStock);
+
+        LockResultEvent lockResultEvent = new LockResultEvent();
+        lockResultEvent.setOrderId(request.getOrderId());
+        lockResultEvent.setIsSuccess(Boolean.TRUE);
+        kafkaTemplate.send("product.lock.result",lockResultEvent);
+
+        return true;
     }
 
 }

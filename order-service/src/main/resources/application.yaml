@@ -9,6 +9,26 @@ spring:
     url: jdbc:mysql://localhost:3306/order_service
     username: root
     password: root
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        request.timeout.ms: 15000
+        linger.ms: 0
+      acks: all
+    consumer:
+      group-id: order-service
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serializer.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serializer.StringDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 45000
 
 services:
   product-service: http://localhost:8080/ecommerce/v1
+  promotion-service: http://localhost:8083/ecommerce/v1

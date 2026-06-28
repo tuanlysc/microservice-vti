@@ -1,5 +1,6 @@
 package com.example.productservice.controller;
 
+import com.example.productservice.dto.request.LockProductRequest;
 import com.example.productservice.dto.request.ProductCreateRequest;
 import com.example.productservice.dto.request.ProductFilter;
 import com.example.productservice.dto.request.ProductUpdateRequest;
@@ -83,6 +84,15 @@ public class ProductController {
                 ApiResponse.<ProductResponse>builder()
                         .code(200)
                         .message("Product Deleted")
+                        .build()
+        );
+    }
+
+    @PutMapping("/lock")
+    ResponseEntity<ApiResponse<Boolean>> lock(@RequestBody @Valid LockProductRequest request){
+        return ResponseEntity.status(HttpStatus.OK).body(
+                ApiResponse.<Boolean>builder()
+                        .data(productService.lock(request))
                         .build()
         );
     }
