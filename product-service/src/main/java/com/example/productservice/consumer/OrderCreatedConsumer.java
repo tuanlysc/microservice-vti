@@ -11,7 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,8 +27,14 @@ public class OrderCreatedConsumer {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @KafkaListener(topics = "order_created")
+    @RetryableTopic(
+            attempts = "4",
+            backoff = @Backoff(delay = 2000, multiplier = 2)
+    )
     public void handleOrderCreateEvent(String orderString) throws JsonProcessingException {
         OrderCreateEvent orderCreateEvent = objectMapper.readValue(orderString, OrderCreateEvent.class);
+
+        log.info("Received Order Created event from topic {}", orderCreateEvent);
 
         List<LockProductItemRequest> lockProductItemRequests = orderCreateEvent.getItems().stream()
                 .map(orderItemEvent -> LockProductItemRequest.builder()

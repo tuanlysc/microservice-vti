@@ -1,0 +1,45 @@
+server:
+  port: 8084
+  servlet:
+    context-path: /ecommerce/v1
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/notification_service
+    username: root
+    password: root
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        request.timeout.ms: 15000
+        linger.ms: 0
+      acks: all
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 45000
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: tuan03cb@gmail.com
+    password: zsrg bgwc loje qyrw
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+services:
+  product-service: http://localhost:8080/ecommerce/v1
+  promotion-service: http://localhost:8083/ecommerce/v1

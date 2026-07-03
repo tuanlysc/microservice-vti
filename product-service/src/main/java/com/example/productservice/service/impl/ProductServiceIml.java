@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ public class ProductServiceIml implements ProductService {
     ProductRepository productRepository;
     ProductMapper productMapper;
     KafkaTemplate<String, LockResultEvent>  kafkaTemplate;
+    RedissonClient redissonClient;
 
     @Override
     @Transactional
@@ -123,26 +125,40 @@ public class ProductServiceIml implements ProductService {
         Map<String,Integer> productsMap = items.stream()
                 .collect(Collectors.toMap(LockProductItemRequest::getProductId, LockProductItemRequest::getQuantity));
 
-        List<Product> products = productRepository.findByIdIn(productIds);
+        List<Product> products = productRepository.findByIdInForUpdate(productIds);
 
+        boolean success = true;
+        String failReason = null;
         List<Product> productStock = new ArrayList<>();
         for (Product product : products) {
             int newStock = product.getStock() - productsMap.get(product.getId());
             if (newStock < 0) {
-                throw new ApplicationException(ErrorCode.STOCK_PRODUCT_TOO_LOW);
+                success = false;
+                failReason = "STOCK TO LOW" + product.getId();
+                break;
             }
             product.setStock(newStock);
             productStock.add(product);
         }
 
+        if (!success) {
+            sendLockKafka(request.getOrderId(), success, failReason);
+
+            return false;
+        }
+
+        sendLockKafka(request.getOrderId(), success, failReason);
         productRepository.saveAll(productStock);
 
-        LockResultEvent lockResultEvent = new LockResultEvent();
-        lockResultEvent.setOrderId(request.getOrderId());
-        lockResultEvent.setIsSuccess(Boolean.TRUE);
-        kafkaTemplate.send("product.lock.result",lockResultEvent);
-
         return true;
+    }
+
+    private void sendLockKafka(String orderId, Boolean isSuccess, String failReason) {
+        LockResultEvent lockResultEvent = new LockResultEvent();
+        lockResultEvent.setOrderId(orderId);
+        lockResultEvent.setIsSuccess(isSuccess);
+        lockResultEvent.setFailReason(failReason);
+        kafkaTemplate.send("product.lock.result",lockResultEvent);
     }
 
 }

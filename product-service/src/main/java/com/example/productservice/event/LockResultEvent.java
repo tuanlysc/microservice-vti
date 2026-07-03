@@ -10,4 +10,5 @@ import lombok.*;
 public class LockResultEvent {
     String orderId;
     Boolean isSuccess;
+    String failReason;
 }

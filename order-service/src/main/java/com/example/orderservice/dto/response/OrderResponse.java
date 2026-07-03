@@ -23,5 +23,5 @@ public class OrderResponse {
     String createdBy;
     Instant updatedAt;
     String updatedBy;
-    List<OrderItemResponse> orderItemResponses;
+    List<OrderItemResponse> items;
 }

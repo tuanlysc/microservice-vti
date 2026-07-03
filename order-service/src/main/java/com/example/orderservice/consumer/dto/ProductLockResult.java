@@ -14,4 +14,5 @@ public class ProductLockResult {
     String orderId;
     @NotEmpty
     Boolean isSuccess;
+    String failReason;
 }

@@ -7,7 +7,6 @@ import com.example.orderservice.entity.Order;
 import com.example.orderservice.exception.ApplicationException;
 import com.example.orderservice.exception.ErrorCode;
 import com.example.orderservice.repository.OrderRepository;
-import com.example.orderservice.service.OrderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
@@ -15,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -24,9 +26,13 @@ import org.springframework.stereotype.Service;
 public class LockProductResultConsumer {
     ObjectMapper objectMapper;
     OrderRepository orderRepository;
-    PromotionClient  promotionClient;
 
     @KafkaListener(topics = "product.lock.result")
+    @RetryableTopic(
+            attempts = "4",
+            backoff = @Backoff(delay = 2000, multiplier = 2)
+    )
+    @Transactional()
     public void handleLockResult(String objectString) throws JsonProcessingException {
         ProductLockResult result = objectMapper.readValue(objectString, ProductLockResult.class);
 
@@ -34,14 +40,11 @@ public class LockProductResultConsumer {
                 () -> new ApplicationException(ErrorCode.ORDER_NOT_FOUND)
         );
 
-        if(result.getIsSuccess()) {
+        if(Boolean.TRUE.equals(result.getIsSuccess())) {
             orderRepository.updateStatus(order.getId(), OrderStatus.CONFIRMED.toString());
         }
         else  {
             orderRepository.updateStatus(order.getId(), OrderStatus.FAILED.toString());
-            if(order.getPromotionApplied()){
-                promotionClient.revoke(order.getId());
-            }
         }
 
     }

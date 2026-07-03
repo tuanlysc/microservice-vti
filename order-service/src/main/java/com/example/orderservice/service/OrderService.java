@@ -9,4 +9,6 @@ public interface OrderService {
     OrderResponse create(OrderCreateRequest request);
 
     List<OrderResponse> getAllOrders();
+
+    OrderResponse findById(String id);
 }

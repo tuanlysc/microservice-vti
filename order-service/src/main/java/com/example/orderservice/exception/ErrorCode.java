@@ -9,7 +9,7 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(400, "Category not found", HttpStatus.NOT_FOUND),
     PRODUCT_NOT_FOUND(400, "Product not found", HttpStatus.NOT_FOUND),
     CALL_PRODUCT_ERROR(404, "Call product error", HttpStatus.NOT_FOUND),
-    APPLY_PROMOTION_ERROR(404, "Apply product error", HttpStatus.NOT_FOUND),
+    APPLY_PROMOTION_ERROR(404, "Apply promotion error", HttpStatus.NOT_FOUND),
     LOCK_PRODUCT_ERROR(404, "Locked product error", HttpStatus.NOT_FOUND),
     DUPLICATE_KEY_PRODUCT(400, "Duplicate key product", HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_STOCK(400, "Not enough stock", HttpStatus.BAD_REQUEST),

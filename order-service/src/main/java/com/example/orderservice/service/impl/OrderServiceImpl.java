@@ -96,7 +96,6 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
 
         // Áp dụng promotion
-        boolean promotionApplied = false;
         if (request.getPromotionCode() != null && !request.getPromotionCode().isBlank()) {
             try {
                 ApplyPromotionResponse promotionResponse = promotionClient.apply(
@@ -108,7 +107,8 @@ public class OrderServiceImpl implements OrderService {
                                 .build());
 
                 savedOrder.setTotalAmount(promotionResponse.getFinalAmount());
-                promotionApplied = true;
+                savedOrder.setPromotionApplied(true);
+                orderRepository.updatePromotionAppliedStatus(savedOrder.getId(),true);
             } catch (Exception e) {
                 log.error("promotionClient.apply() fail - code={}, error={}",
                         request.getPromotionCode(), e.getMessage(), e);
@@ -120,30 +120,6 @@ public class OrderServiceImpl implements OrderService {
 
         OrderCreateEvent orderCreateEvent = orderMapper.toEvent(savedOrder);
         orderKafkaTemplate.send("order_created", orderCreateEvent);
-
-//        try {
-//            productClient.lock(LockProductRequest.builder()
-//                    .items(orderItems.stream()
-//                            .map(oi -> LockProductItemRequest.builder()
-//                                    .productId(oi.getProductId())
-//                                    .quantity(oi.getQuantity())
-//                                    .build())
-//                            .toList())
-//                    .build());
-//        } catch (Exception e) {
-//            if (promotionApplied) {
-//                try {
-//                    promotionClient.revoke(savedOrder.getId());
-//                } catch (Exception revokeEx) {
-//                    log.error("Revoke promotion fail - orderId={}, error={}",
-//                            savedOrder.getId(), revokeEx.getMessage(), revokeEx);
-//                    throw new ApplicationException(ErrorCode.REVOKE_PROMOTION_FAILED);
-//                }
-//            }
-//
-//            orderRepository.updateStatus(savedOrder.getId(), FAILED.toString());
-//            throw new ApplicationException(ErrorCode.LOCK_PRODUCT_ERROR);
-//        }
         return orderMapper.toResponse(savedOrder);
     }
 
@@ -153,4 +129,13 @@ public class OrderServiceImpl implements OrderService {
                 .map(orderMapper::toResponse)
                 .toList();
     }
+
+    @Override
+    public OrderResponse findById(String id) {
+        return orderRepository.findById(id).map(orderMapper::toResponse).orElseThrow(
+                () -> new ApplicationException(ErrorCode.ORDER_NOT_FOUND)
+        );
+    }
+
+
 }
