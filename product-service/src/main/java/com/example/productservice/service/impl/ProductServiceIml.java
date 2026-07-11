@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -120,35 +122,57 @@ public class ProductServiceIml implements ProductService {
     @Transactional
     public Boolean lock(LockProductRequest request) {
         List<LockProductItemRequest>  items = request.getItems();
-        List<String> productIds = items.stream().map(LockProductItemRequest::getProductId).toList();
+        List<String> productIds = items.stream()
+                .map(LockProductItemRequest::getProductId)
+                .sorted() // tranh dead lock
+                .toList();
 
         Map<String,Integer> productsMap = items.stream()
                 .collect(Collectors.toMap(LockProductItemRequest::getProductId, LockProductItemRequest::getQuantity));
 
-        List<Product> products = productRepository.findByIdInForUpdate(productIds);
+        RLock[] locks = productIds.stream()
+                .map(id -> redissonClient.getLock("Lock product: " + id))
+                .toArray(RLock[]::new);
 
-        boolean success = true;
-        String failReason = null;
-        List<Product> productStock = new ArrayList<>();
-        for (Product product : products) {
-            int newStock = product.getStock() - productsMap.get(product.getId());
-            if (newStock < 0) {
-                success = false;
-                failReason = "STOCK TO LOW" + product.getId();
-                break;
+        RLock multiLock = redissonClient.getMultiLock(locks);
+
+        try {
+            if (multiLock.tryLock(10, 5, TimeUnit.SECONDS)){
+                log.info("start log product lock: {}", productIds);
+                List<Product> products = productRepository.findByIdIn(productIds);
+
+                boolean success = true;
+                String failReason = null;
+                List<Product> productStock = new ArrayList<>();
+                for (Product product : products) {
+                    int newStock = product.getStock() - productsMap.get(product.getId());
+                    if (newStock < 0) {
+                        success = false;
+                        failReason = "STOCK TO LOW" + product.getId();
+                        break;
+                    }
+                    product.setStock(newStock);
+                    productStock.add(product);
+                }
+
+                if (!success) {
+                    sendLockKafka(request.getOrderId(), success, failReason);
+
+                    return false;
+                }
+
+                sendLockKafka(request.getOrderId(), success, failReason);
+                productRepository.saveAll(productStock);
+
+                return true;
             }
-            product.setStock(newStock);
-            productStock.add(product);
+        } catch (InterruptedException e) {
+            throw new ApplicationException(e.getMessage(), ErrorCode.RACE_CONDITION_PRODUCT);
+        } finally {
+            if (multiLock.isHeldByCurrentThread()) {
+                multiLock.unlock();
+            }
         }
-
-        if (!success) {
-            sendLockKafka(request.getOrderId(), success, failReason);
-
-            return false;
-        }
-
-        sendLockKafka(request.getOrderId(), success, failReason);
-        productRepository.saveAll(productStock);
 
         return true;
     }

@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductLockResult {
     String orderId;
-    @NotEmpty
     Boolean isSuccess;
     String failReason;
 }

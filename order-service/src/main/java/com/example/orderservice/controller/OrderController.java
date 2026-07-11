@@ -20,7 +20,7 @@ import java.util.List;
 @RequestMapping("/order")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class OrderController {
+public class             OrderController {
 
     OrderService orderService;
 

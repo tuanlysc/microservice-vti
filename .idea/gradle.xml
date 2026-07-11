@@ -4,6 +4,15 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/api-gateway" />
+        <option name="gradleJvm" value="22" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/api-gateway" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/notification-service" />
         <option name="gradleJvm" value="22" />
         <option name="modules">
@@ -36,6 +45,15 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/promotion-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/registry-service" />
+        <option name="gradleJvm" value="22" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/registry-service" />
           </set>
         </option>
       </GradleProjectSettings>

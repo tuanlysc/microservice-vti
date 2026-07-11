@@ -40,6 +40,7 @@ spring:
           starttls:
             enable: true
 
-services:
-  product-service: http://localhost:8080/ecommerce/v1
-  promotion-service: http://localhost:8083/ecommerce/v1
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

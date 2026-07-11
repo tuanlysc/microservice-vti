@@ -12,6 +12,7 @@ public enum ErrorCode {
     ROLE_INVALID(400, "Role Is Valid", HttpStatus.BAD_REQUEST),
     CATEGORY_DUPLICATE_NAME(400, "Category Duplicate Name", HttpStatus.BAD_REQUEST),
     INTERNAL_SERVER_ERROR(500, "Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR),
+    RACE_CONDITION_PRODUCT(400, "Race Condition Product", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;
